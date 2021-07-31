@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+</head>
+<style>
+  html,body{
+    min-height: 99vh;
+    background: center / cover no-repeat url(https://www.mirrormedia.com.tw/assets/images/20161018111430-df479ad752e53b17fd0c3b03cfc681e3-mobile.jpg);
+  }
+  .todos{
+    width: 500px;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 120px auto 0px;
+    padding: 30px;
+    background: transparent;
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px -2px rgba(0,0,0,.5);
+  }
+  .completed {
+    text-decoration: line-through
+  }
+  .bg-gray{
+    background: #000;
+    color: white;
+  }
+  .active{
+    background: white;
+    color: #000;
+  }
+</style>
+<body>
+  <div id="app">
+    <div class="container my-2 d-flex justify-content-center">
+      <div class="todos">
+        <header>
+          <h1 class="h2">待辦任務</h1>
+        </header>
+        <main>
+          <ul class="list list-unstyled m-0 p-4">
+            <li v-show="!filterTodos.length" class="h4 mt-2">目前沒有任何任務哦！！</li>
+            <li v-else v-for="item in filterTodos" :key="item.id" class="mb-3">
+              <div class="d-flex justify-content-between">
+                <label role="button" class="px-2 mt-2" @click="checkboxTodo(item)">
+                  <span class="material-icons" v-if="item.completed">check_box</span>
+                  <span class="material-icons" v-else >check_box_outline_blank</span>
+                </label>
+                <span class="h4 mt-2" :class="item.completed ? 'completed':''">{{item.text}}</span>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-light" @click="editData(item)">編輯</button>
+                  <button type="button" class="btn btn-dark" @click="removeData(item)">刪除</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </main>
+        <footer>
+          <div class="input-group mb-3">
+            <input type="text" @keyup.enter="addData" class="form-control" v-model="text" placeholder="請輸入今日任務" aria-label="Recipient's username" aria-describedby="basic-addon2">
+            <button @click="addData" type="button" class="btn btn-outline-dark w-25">確認</button>
+          </div>
+          <div class="input-group mb-3" v-show="open">
+            <input type="text" v-model="temp.text" @keyup.enter="doneData">
+            <button type="button" class="btn btn-dark" @click="doneData">編輯完成</button>
+          </div>
+        </footer>
+        <div class="tabs mt-5">
+          <ul class="list-unstyled d-flex justify-content-between">
+            <li><button type="button" class="bg-gray" :class="{'active': visibility === 'all'}" @click="visibility = 'all'">全部</button></li>
+            <li><button type="button" class="bg-gray" :class="{'active': visibility === 'process'}" @click="visibility = 'process'">進行中</button></li>
+            <li><button type="button" class="bg-gray" :class="{'active': visibility === 'done'}" @click="visibility = 'done'">已完成</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://unpkg.com/vue@next"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8" crossorigin="anonymous"></script>
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          text: '',
+          todos: [],
+          temp:{},
+          visibility: 'all',
+          open: false,
+          record: [],
+        }
+      },
+      methods: {
+        addData(){
+          this.todos.push({
+              id : this.todos.length+1,
+              text: this.text,
+              completed: false
+            });
+          this.text = '';
+          this.saveLocal();
+        },
+        removeData(item){
+          const index = this.todos.findIndex(obj => obj.id === item.id)
+          // console.log(index);
+          this.todos.splice(index,1);
+          this.saveLocal();
+        },
+        editData(item){
+          this.temp = {...item};
+          this.open = true;
+          this.saveLocal();
+        },
+        doneData(){
+          const index = this.todos.findIndex(obj => obj.id === this.temp.id);
+          this.todos[index] = this.temp;
+          this.open = false;
+          this.temp = {};
+          this.saveLocal();
+        },
+        checkboxTodo(item){
+          item.completed = !item.completed;
+          this.saveLocal();
+        },
+        saveLocal(){
+          localStorage.setItem("todo-list", JSON.stringify(this.todos)) || [];
+        }
+      },
+      computed :{
+        filterTodos (){
+          switch (this.visibility){
+            case 'process':
+              return this.todos.filter((item) => !item.completed);
+              break;
+            case 'done':
+              return this.todos.filter((item) => item.completed);
+              break;
+            default:
+              return this.todos;
+          }
+        }
+      },
+      mounted() {
+        this.record = JSON.parse(localStorage.getItem("todo-list"));
+        if(this.record.length > 0 ){
+          this.todos = this.record;
+        }
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
