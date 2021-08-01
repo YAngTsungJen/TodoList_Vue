@@ -107,8 +107,8 @@
         },
         removeData(item){
           const index = this.todos.findIndex(obj => obj.id === item.id)
-          // console.log(index);
           this.todos.splice(index,1);
+          this.open = false;
           this.saveLocal();
         },
         editData(item){
