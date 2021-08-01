@@ -46,7 +46,7 @@
         <main>
           <ul class="list list-unstyled m-0 p-4">
             <li v-show="!filterTodos.length" class="h4 mt-2">目前沒有任何任務哦！！</li>
-            <li v-else v-for="item in filterTodos" :key="item.id" class="mb-3">
+            <li v-for="item in filterTodos" :key="item.id" class="mb-3">
               <div class="d-flex justify-content-between">
                 <label role="button" class="px-2 mt-2" @click="checkboxTodo(item)">
                   <span class="material-icons" v-if="item.completed">check_box</span>
@@ -92,14 +92,18 @@
           temp:{},
           visibility: 'all',
           open: false,
-          record: [],
+          record: []
         }
       },
       methods: {
         addData(){
+          const text = this.text && this.text.trim();
+          if(!text){
+            return;
+          }
           this.todos.push({
               id : this.todos.length+1,
-              text: this.text,
+              text: text,
               completed: false
             });
           this.text = '';
